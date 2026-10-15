@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FrameFlow Map</title>
+<meta name="theme-color" content="#101315">
+<meta name="description" content="Animate maps on your phone: borders, travel routes, highlights, pins and cinematic camera moves.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Map Studio">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <input id="projName" aria-label="Project name" maxlength="100" autocomplete="off" spellcheck="false">
+    <button id="undo" class="ic" aria-label="Undo" disabled>↶</button>
+    <button id="redo" class="ic" aria-label="Redo" disabled>↷</button>
+    <button id="exportBtn" class="primary">Export</button>
+  </header>
+
+  <section id="stage"><canvas id="canvas" aria-label="Map preview"></canvas></section>
+
+  <section id="transport">
+    <button id="play" class="ic round" aria-label="Play or pause">▶</button>
+    <span id="time">00:00:00</span>
+    <input id="scrub" type="range" min="0" max="1" step="1" value="0" aria-label="Playhead">
+    <button id="loop" class="ic active" aria-label="Loop" title="Loop">⟲</button>
+    <button id="big" class="ic" aria-label="Bigger preview" title="Bigger preview">⤢</button>
+    <button id="full" class="ic" aria-label="Fullscreen" title="Fullscreen">⛶</button>
+  </section>
+
+  <section id="pickbar" hidden>
+    <span id="pickMsg">Tap the map to choose a location</span>
+    <span id="pickKind" hidden>
+      <button data-pk="place" class="active">Place</button><button data-pk="country">Country</button>
+    </span>
+    <button id="pickCancel">Cancel</button>
+  </section>
+
+  <section id="sheet">
+    <div class="panel" id="p-timeline">
+      <div class="panel-head">
+        <button class="js-dup" disabled>Duplicate</button>
+        <button class="js-del" disabled>Delete</button>
+        <label class="zoom">Zoom <input id="tlZoom" type="range" min="1" max="8" step=".25" value="1"></label>
+      </div>
+      <div id="tl"><div id="tlInner"></div></div>
+    </div>
+
+    <div class="panel" id="p-add">
+      <h3>Animations <small>added at the playhead</small></h3>
+      <div class="grid" id="addGrid"></div>
+      <h3>Camera moves <small>they move the view for you</small></h3>
+      <div class="grid" id="presetGrid"></div>
+    </div>
+
+    <div class="panel" id="p-edit">
+      <label class="itemsel">Item <select id="itemSel"></select></label>
+      <div class="actions"><button class="js-dup" disabled>Duplicate</button><button class="js-del" disabled>Delete</button></div>
+      <div id="inspector"></div>
+    </div>
+
+    <div class="panel" id="p-project">
+      <h3>Map</h3>
+      <label>Style <select id="theme"></select></label>
+      <label class="chk"><input type="checkbox" id="grat"> Show lat/long grid</label>
+      <label>Start view <select id="region"></select></label>
+      <div class="two">
+        <label>Zoom <input id="startZoom" type="number" inputmode="decimal" min="0" max="12" step=".1"></label>
+        <label>Tilt° <input id="startPitch" type="number" inputmode="decimal" min="0" max="70" step="1"></label>
+      </div>
+      <label>Rotation° <input id="startBearing" type="number" inputmode="decimal" min="-180" max="180" step="5"></label>
+      <h3>Texture</h3>
+      <label>Surface <select id="texture"></select></label>
+      <label>Strength <span class="val" id="texStrengthV"></span><input id="texStrength" type="range" min="0" max="100" step="1"></label>
+      <label>Scale <span class="val" id="texScaleV"></span><input id="texScale" type="range" min="50" max="300" step="10"></label>
+      <h3>Video</h3>
+      <label>Canvas <select id="size">
+        <option value="1280,720">Landscape · 1280 × 720</option>
+        <option value="1920,1080">Full HD · 1920 × 1080</option>
+        <option value="1080,1920">Portrait / Shorts · 1080 × 1920</option>
+        <option value="1080,1080">Square · 1080 × 1080</option>
+      </select></label>
+      <div class="two">
+        <label>Frame rate <select id="fps"><option>24</option><option>30</option><option>60</option></select></label>
+        <label>Duration (s) <input id="duration" type="number" inputmode="decimal" step=".1"></label>
+      </div>
+      <label>Preview quality <select id="quality">
+        <option value="fast">Fast (best for older phones)</option>
+        <option value="balanced">Balanced</option>
+        <option value="full">Full (sharpest)</option>
+      </select></label>
+      <div id="labelStyle"></div>
+      <h3>Project</h3>
+      <div class="grid files">
+        <button id="newBtn">New</button><button id="demoBtn">Demo</button>
+        <button id="openBtn">Open file</button><button id="saveBtn">Save file</button>
+        <button id="pngBtn">Save PNG</button><button id="helpBtn">How to use</button>
+        <button id="installBtn" hidden>Install app</button>
+      </div>
+      <p class="muted">Changes are saved on this phone automatically. “Save file” makes a <code>.framemap.json</code> you can back up or open in the desktop Map Studio.</p>
+      <input id="file" type="file" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <nav id="tabs">
+    <button data-tab="timeline" class="on"><b>▤</b>Timeline</button>
+    <button data-tab="add"><b>＋</b>Add</button>
+    <button data-tab="edit"><b>✎</b>Edit</button>
+    <button data-tab="project"><b>⚙</b>Project</button>
+  </nav>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg"><div id="dlgBody"></div></dialog>
+<datalist id="dlBorder"></datalist><datalist id="dlCountry"></datalist><datalist id="dlPlace"></datalist><datalist id="dlAny"></datalist>
+<script type="module" src="app.js"></script>
+</body>
+</html>
