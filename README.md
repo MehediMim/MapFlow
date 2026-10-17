@@ -55,7 +55,7 @@ WebM export runs in the browser with WebCodecs and can be memory/CPU-intensive f
 
 Natural Earth world country geometry is included in the files supplied for the original FrameFlow project. Regional sources and licensing information are retained inside `map-data/bangladesh-detail.json` and `map-data/myanmar-detail.json`; comply with those attributions when distributing maps or videos. The Bangladesh detail data is approximate/simplified regional geometry rather than a street map. Myanmar's boundaries use the source indicated in that pack. Country polygons do not include road-level features.
 
-The service worker caches the core application and world map once installed. Previously visited detail packs are cached as downloaded. Satellite imagery and unseen data require an internet connection. If the app shows an empty screen, start it from HTTP(S), not `file://`, and confirm the full `map-data/` directory was uploaded.
+The service worker caches the core application and world map once installed. While online, app pages, scripts, and styles are fetched from the network first; cached copies remain available offline. The app checks for updates when opened, brought back to the foreground, or reconnected. If a previously installed version remains stuck, open `update.html` beside your site URL and tap **Update and open Mapflow**. This refreshes app files without deleting the project stored in localStorage. Previously visited detail packs are cached as downloaded. Satellite imagery and unseen data require an internet connection. If the app shows an empty screen, start it from HTTP(S), not `file://`, and confirm the full `map-data/` directory was uploaded.
 
 ## Project layout
 

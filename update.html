@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c0d12">
+  <title>Update Mapflow</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#0c0d12;color:#f5f5f8;font:16px/1.6 system-ui,sans-serif}main{max-width:420px}h1{line-height:1.2}p{color:#aeb0bc}button,a{display:block;padding:14px 20px;border:0;border-radius:12px;background:#b9ff79;color:#182313;font:inherit;font-weight:750;text-align:center;text-decoration:none;cursor:pointer}button{width:100%}button:disabled{opacity:.5}[hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main><h1>Get the latest Mapflow</h1><p>Refresh the app files on this device. Your saved project stays on this device.</p><button id="updateBtn">Update and open Mapflow</button><p id="status" role="status" aria-live="polite"></p><a id="returnLink" href="./" hidden>Return to Mapflow</a></main>
+  <script>
+    const button=document.getElementById('updateBtn'),status=document.getElementById('status');
+    button.onclick=async()=>{
+      button.disabled=true;status.textContent='Downloading the latest app…';
+      try{
+        const home=new URL('./',location.href);
+        // Confirm connectivity before removing offline files. Never touch localStorage.
+        const response=await fetch(new URL('index.html?refresh='+Date.now(),home),{cache:'no-store'});
+        if(!response.ok)throw Error('The app could not be downloaded. Please try again.');
+        if('serviceWorker' in navigator){
+          const registrations=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.filter(r=>r.scope===home.href).map(r=>r.unregister()));
+        }
+        if('caches' in window){
+          const keys=await caches.keys();
+          for(const key of keys.filter(k=>k.startsWith('mapflow-'))){
+            const cache=await caches.open(key);
+            const requests=await cache.keys();
+            await Promise.all(requests.filter(r=>r.url.startsWith(home.href)).map(r=>cache.delete(r)));
+          }
+        }
+        home.searchParams.set('updated',Date.now());location.replace(home.href);
+      }catch(error){status.textContent=error.message||'Connect to the internet and try again.';button.disabled=false;document.getElementById('returnLink').hidden=false;}
+    };
+  </script>
+</body>
+</html>

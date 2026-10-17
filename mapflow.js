@@ -285,4 +285,25 @@ engineCanvas.addEventListener('wheel',e=>{if(!geo||pick)return;e.preventDefault(
 window.addEventListener('keydown',e=>{if($('workspace').hidden||e.target.matches?.('input,textarea,select'))return;if(e.key===' '&&e.target.closest?.('button'))return;if(e.key===' '){e.preventDefault();playing?pause():play();}else if(e.key==='Escape'){if($('previewPanel').classList.contains('preview-expanded')){void exitPreviewFullscreen();return;}if(pick)finishPick(true);else closeSheet();}else if(e.key==='ArrowLeft'){pause();setFrame(frame-1);}else if(e.key==='ArrowRight'){pause();setFrame(frame+1);}});
 window.addEventListener('resize',()=>renderTimeline());document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 showScreen(location.hash==='#editor',false);setFrame(0);void initGeo();
-if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(e=>console.debug('Offline cache unavailable',e));
+if('serviceWorker'in navigator&&location.protocol.startsWith('http')){
+ const hadController=!!navigator.serviceWorker.controller;
+ let updatePending=false,reloading=false;
+ function applyAppUpdate(){
+  if(!updatePending||reloading||activeExport||document.hidden)return;
+  reloading=true;
+  document.activeElement?.blur();
+  if(!$('workspace').hidden)store();
+  location.reload();
+ }
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if(hadController){updatePending=true;applyAppUpdate();}
+ });
+ navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>{
+  const check=()=>registration.update().catch(e=>console.debug('Update check unavailable',e));
+  void check();
+  window.addEventListener('online',()=>{void check();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){applyAppUpdate();void check();}});
+ }).catch(e=>console.debug('Offline cache unavailable',e));
+ // Let a running export finish before applying an available update.
+ window.setInterval(applyAppUpdate,2000);
+}

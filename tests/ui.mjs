@@ -15,11 +15,16 @@ const browserPath=process.argv[2] || [
 ].find(existsSync);
 assert(browserPath,'Pass a Chrome or Edge executable as the first argument.');
 const root=resolve(import.meta.dirname,'..');
+let legacyWorker=false;
 const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
 const server=createServer(async(req,res)=>{
  try{
   const path=resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/\/$/,'/index.html'));
   if(!path.startsWith(root+sep))throw Error('Invalid path');
+  if(legacyWorker&&path===resolve(root,'sw.js')){
+   res.setHeader('Content-Type','text/javascript');
+   res.end(`self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{if(e.request.method==='GET'&&new URL(e.request.url).origin===location.origin)e.respondWith(caches.match(e.request,{ignoreSearch:true}).then(hit=>hit||fetch(e.request)));});`);return;
+  }
   res.setHeader('Content-Type',types[extname(path)]||'application/octet-stream');res.end(await readFile(path));
  }catch{res.writeHead(404);res.end();}
 });
@@ -99,7 +104,34 @@ try{
  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#sheetContent input')).userSelect`),'text');
  await evaluate(`document.getElementById('closeSheet').click();document.getElementById('timelineViewport').scrollLeft=72`);
  await until(`document.getElementById('currentTime').textContent!=='00:00.0'`);
- console.log('UI checks passed: home, create, resume, native fullscreen entry/exit, fullscreen playback, fallback/Escape, text selection, vertical touch scrolling over clips, and horizontal scrubbing.');
+ await until(`!!navigator.serviceWorker.controller`);
+ const savedProject=await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`);
+ // Online navigation must replace stale cached HTML, and offline still works.
+ await evaluate(`(async()=>{const keys=await caches.keys();const cache=await caches.open(keys.find(k=>k.startsWith('mapflow-')));await cache.put(new URL('./',location.href),new Response('<h1>Stale app</h1>',{headers:{'Content-Type':'text/html'}}));location.reload();})()`);
+ await until(`!!document.getElementById('fullscreenBtn')?.onclick`);
+ assert.equal(await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`),savedProject);
+ await page('Network.enable');
+ await page('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:-1,uploadThroughput:-1});
+ await page('Page.reload');
+ await until(`!!document.getElementById('fullscreenBtn')?.onclick`);
+ assert.equal(await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`),savedProject);
+ await page('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
+ // Reproduce the old cache-first worker, then repair it through update.html.
+ legacyWorker=true;
+ await evaluate(`(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();})()`);
+ await until(`!!document.getElementById('fullscreenBtn')?.onclick`);
+ await delay(500);
+ await evaluate(`(async()=>{const home=new URL('./',location.href);for(const key of await caches.keys()){const cache=await caches.open(key);await cache.delete(home.href,{ignoreSearch:true});}const cache=await caches.open('mapflow-legacy-test');await cache.put(home,new Response('<h1>Stale app</h1>',{headers:{'Content-Type':'text/html'}}));})()`);
+ await page('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`});
+ await until(`document.querySelector('h1')?.textContent==='Stale app'`);
+ await page('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/update.html`});
+ await until(`!!document.getElementById('updateBtn')?.onclick`);
+ legacyWorker=false;
+ await evaluate(`document.getElementById('updateBtn').click()`);
+ await until(`!!document.getElementById('fullscreenBtn')?.onclick`);
+ assert.equal(await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`),savedProject);
+ assert.equal(await evaluate(`document.getElementById('recentProjectName').textContent`),'Scroll regression');
+ console.log('UI checks passed: home, fullscreen/playback/fallback, touch scrolling, scrubbing, stale-cache refresh, offline startup, and legacy-worker recovery with saved project preserved.');
 }finally{
  ws?.close();if(browser&&browser.exitCode===null){const exited=once(browser,'exit');browser.kill();await exited.catch(()=>{});}
  server.closeAllConnections();await new Promise(resolve=>server.close(resolve));
