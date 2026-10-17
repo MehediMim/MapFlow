@@ -13,6 +13,7 @@ import { OBJECT_ICONS, EFFECTS, SHAPES, OBJECT_ENTER, OBJECT_IDLE, OBJECT_EXIT }
 import { createImagery } from './map-imagery.mjs';
 import { panMapCamera, zoomMapCamera } from './map-navigation.mjs';
 import { exportMapVideo } from './map-video-export.mjs';
+import { snapTimeline } from './timeline-snap.mjs';
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -247,12 +248,20 @@ viewport.addEventListener('scroll',()=>{
  if(timelineSync||scrollRAF)return;
  scrollRAF=requestAnimationFrame(()=>{scrollRAF=0;if(timelineSync)return;pause();setFrame(viewport.scrollLeft/pixelPerFrame(),true);});
 },{passive:true});
-let clipDrag=null;
+let clipDrag=null,magnetic=true;
+function snapGuide(target){
+ const guide=$('snapGuide');guide.hidden=target===null;
+ if(target!==null)guide.style.left=(viewport.clientWidth/2+target*pixelPerFrame()-viewport.scrollLeft)+'px';
+}
+$('magnetBtn').onclick=()=>{
+ magnetic=!magnetic;$('magnetBtn').setAttribute('aria-pressed',String(magnetic));
+ $('magnetBtn').textContent=magnetic?'Magnet on':'Magnet off';snapGuide(null);
+};
 $('timelineContent').addEventListener('pointerdown',e=>{
  const clip=e.target.closest('[data-clip]');if(!clip||e.button!==0)return;
  e.stopPropagation();pause();const it=items().find(x=>x.id===clip.dataset.clip);if(!it)return;
  // Touch pan-y lets the browser scroll layers; horizontal motion edits the clip.
- clipDrag={it,clip,pointer:e.pointerId,startX:e.clientX,startY:e.clientY,start:e.target.closest('[data-resize]')?it.dur:it.start,mode:e.target.closest('[data-resize]')?'resize':'move',moved:false};
+ clipDrag={it,clip,pointer:e.pointerId,startX:e.clientX,startY:e.clientY,start:e.target.closest('[data-resize]')?it.dur:it.start,mode:e.target.closest('[data-resize]')?'resize':'move',moved:false,targets:[...new Set([0,frame,p.frames,...items().filter(x=>x.id!==it.id).flatMap(x=>[x.start,x.start+x.dur])])]};
  clip.setPointerCapture(e.pointerId);
 });
 $('timelineContent').addEventListener('pointermove',e=>{
@@ -264,14 +273,17 @@ $('timelineContent').addEventListener('pointermove',e=>{
   checkpoint();clipDrag.moved=true;selected=clipDrag.it.id;updateSelected();
   document.querySelectorAll('.clip.selected').forEach(el=>el.classList.remove('selected'));clipDrag.clip.classList.add('selected');
  }
- const frames=Math.round(d/pixelPerFrame());
- if(clipDrag.mode==='resize'){clipDrag.it.dur=Math.max(1,clipDrag.start+frames);clipDrag.clip.style.width=Math.max(24,clipDrag.it.dur*pixelPerFrame())+'px';}
- else{clipDrag.it.start=Math.max(0,clipDrag.start+frames);clipDrag.clip.style.left=(viewport.clientWidth/2+clipDrag.it.start*pixelPerFrame())+'px';}
+ const frames=Math.round(d/pixelPerFrame()),drag=clipDrag,resize=drag.mode==='resize';
+ const raw=resize?drag.it.start+Math.max(1,drag.start+frames):Math.max(0,drag.start+frames);
+ const result=magnetic&&!e.shiftKey?snapTimeline({value:raw,targets:drag.targets,offsets:resize?[0]:[0,drag.it.dur],min:resize?drag.it.start+1:0,pixelsPerFrame:pixelPerFrame()}):{value:raw,target:null};
+ snapGuide(result.target);
+ if(resize){drag.it.dur=result.value-drag.it.start;drag.clip.style.width=Math.max(24,drag.it.dur*pixelPerFrame())+'px';}
+ else{drag.it.start=result.value;drag.clip.style.left=(viewport.clientWidth/2+drag.it.start*pixelPerFrame())+'px';}
  draw();
 });
 function endClip(e){
  if(!clipDrag||clipDrag.pointer!==e.pointerId)return;
- const was=clipDrag;clipDrag=null;
+ const was=clipDrag;clipDrag=null;snapGuide(null);
  if(e.type==='pointercancel'){
   if(was.moved){if(was.mode==='resize')was.it.dur=was.start;else was.it.start=was.start;undo.pop();setUndo();refresh();}
   return;

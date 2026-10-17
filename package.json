@@ -7,6 +7,6 @@
   "scripts": {
     "start": "python3 -m http.server 8000",
     "check": "node --check mapflow.js && node --check map-engine.mjs && node --check map-video-export.mjs",
-    "test": "node tests/smoke.mjs"
+    "test": "node tests/smoke.mjs && node tests/timeline-snap.mjs"
   }
 }

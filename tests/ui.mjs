@@ -104,6 +104,28 @@ try{
  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#sheetContent input')).userSelect`),'text');
  await evaluate(`document.getElementById('closeSheet').click();document.getElementById('timelineViewport').scrollLeft=72`);
  await until(`document.getElementById('currentTime').textContent!=='00:00.0'`);
+ // Import staggered clips, then move/resize with actual touch gestures.
+ await evaluate(`(()=>{const p=JSON.parse(localStorage.getItem('mapflow-mobile-project-v1'));p.actions.forEach((a,i)=>{a.start=i===0?10:i===1?90:240;a.dur=i===1?60:30;a.animDur=a.dur;});const dt=new DataTransfer();dt.items.add(new File([JSON.stringify(p)],'magnetic.json',{type:'application/json'}));const input=document.getElementById('importInput');input.files=dt.files;input.dispatchEvent(new Event('change'));})()`);
+ await until(`JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0].start===10`);
+ await evaluate(`document.getElementById('closeSheet').click();document.getElementById('timelineViewport').scrollTop=0;document.getElementById('timelineViewport').scrollLeft=0`);
+ await delay(100);
+ const touchDrag=async(delta,resize=false,expectGuide=false)=>{
+  const rect=await evaluate(`(()=>{const r=document.querySelector('.clip').getBoundingClientRect();return {x:${resize?'r.right-5':'r.x+8'},y:r.y+15};})()`);
+  await page('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[rect]});
+  for(let i=1;i<=4;i++){await page('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:rect.x+delta*i/4,y:rect.y}]});await delay(30);}
+  assert.equal(await evaluate(`!document.getElementById('snapGuide').hidden`),expectGuide);
+  await page('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await delay(100);assert.equal(await evaluate(`document.getElementById('snapGuide').hidden`),true);
+  await evaluate(`document.getElementById('closeSheet').click()`);
+ };
+ await touchDrag(57.6,false,true);
+ assert.equal(await evaluate(`JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0].start`),60,'Trailing edge snaps to the next clip start');
+ await evaluate(`document.getElementById('magnetBtn').click()`);
+ await touchDrag(-7.2);
+ assert.equal(await evaluate(`JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0].start`),54,'Magnet off permits nearby free placement');
+ await evaluate(`document.getElementById('magnetBtn').click()`);
+ await touchDrag(75.6,true,true);
+ assert.equal(await evaluate(`(()=>{const a=JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0];return a.start+a.dur;})()`),150,'Resize snaps to another clip end');
  await until(`!!navigator.serviceWorker.controller`);
  const savedProject=await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`);
  // Online navigation must replace stale cached HTML, and offline still works.
@@ -131,7 +153,7 @@ try{
  await until(`!!document.getElementById('fullscreenBtn')?.onclick`);
  assert.equal(await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`),savedProject);
  assert.equal(await evaluate(`document.getElementById('recentProjectName').textContent`),'Scroll regression');
- console.log('UI checks passed: home, fullscreen/playback/fallback, touch scrolling, scrubbing, stale-cache refresh, offline startup, and legacy-worker recovery with saved project preserved.');
+ console.log('UI checks passed: home, fullscreen, scrolling/scrubbing, magnetic touch move/resize/toggle/guide, stale-cache refresh, offline startup, and legacy-worker recovery.');
 }finally{
  ws?.close();if(browser&&browser.exitCode===null){const exited=once(browser,'exit');browser.kill();await exited.catch(()=>{});}
  server.closeAllConnections();await new Promise(resolve=>server.close(resolve));

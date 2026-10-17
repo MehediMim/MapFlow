@@ -26,7 +26,7 @@ The app opens on a home screen with **Create new project**, **Import a project**
 
 Run optional real-browser UI checks with `node tests/ui.mjs` (Node 22+ and a local Chrome or Edge installation), or pass the browser executable as its first argument.
 
-Interface text cannot be selected accidentally. Text fields still support normal editing, selection, and copy/paste. Swipe vertically over timeline lanes or clips to scroll between layers; swipe horizontally on empty lanes to scrub, or drag a clip horizontally to move it. Drag its right handle horizontally to resize it.
+Interface text cannot be selected accidentally. Text fields still support normal editing, selection, and copy/paste. Swipe vertically over timeline lanes or clips to scroll between layers; swipe horizontally on empty lanes to scrub, or drag a clip horizontally to move it. Drag its right handle horizontally to resize it. With **Magnet on**, moving and resizing snap within 10 screen pixels of other clip edges, the playhead, and the project start/end. An amber guide marks the snap. Tap **Magnet on/off** to toggle snapping, or hold Shift while dragging on desktop to bypass it.
 
 Tap **Fullscreen** above the map to expand the preview. Use **Play/Pause** below the map during fullscreen playback, and **Exit fullscreen** (or Escape on desktop) to return to editing. Browsers without native fullscreen use an expanded in-app preview.
 
