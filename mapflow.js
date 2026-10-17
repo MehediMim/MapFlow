@@ -288,8 +288,9 @@ function endClip(e){
   if(was.moved){if(was.mode==='resize')was.it.dur=was.start;else was.it.start=was.start;undo.pop();setUndo();refresh();}
   return;
  }
- if(was.moved){if(was.mode==='resize'&&was.it.type&&was.it.animDur)was.it.animDur=was.it.dur;extend();store();refresh();openSheet('edit');}
- else selectItem(was.it.id);
+ if(was.moved){if(was.mode==='resize'&&was.it.type&&was.it.animDur)was.it.animDur=was.it.dur;extend();store();refresh();}
+ // Open after the tap's click finishes so it cannot immediately hit the scrim.
+ else setTimeout(()=>selectItem(was.it.id),0);
 }
 $('timelineContent').addEventListener('pointerup',endClip);$('timelineContent').addEventListener('pointercancel',endClip);
 engineCanvas.addEventListener('pointerdown',onPointerDown);engineCanvas.addEventListener('pointermove',onPointerMove);engineCanvas.addEventListener('pointerup',onPointerUp);engineCanvas.addEventListener('pointercancel',onPointerUp);

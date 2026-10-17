@@ -116,7 +116,7 @@ try{
   assert.equal(await evaluate(`!document.getElementById('snapGuide').hidden`),expectGuide);
   await page('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await delay(100);assert.equal(await evaluate(`document.getElementById('snapGuide').hidden`),true);
-  await evaluate(`document.getElementById('closeSheet').click()`);
+  assert.equal(await evaluate(`document.getElementById('sheet').classList.contains('open')`),false,'Moving or resizing must not open the edit menu');
  };
  await touchDrag(57.6,false,true);
  assert.equal(await evaluate(`JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0].start`),60,'Trailing edge snaps to the next clip start');
@@ -126,6 +126,12 @@ try{
  await evaluate(`document.getElementById('magnetBtn').click()`);
  await touchDrag(75.6,true,true);
  assert.equal(await evaluate(`(()=>{const a=JSON.parse(localStorage.getItem('mapflow-mobile-project-v1')).actions[0];return a.start+a.dur;})()`),150,'Resize snaps to another clip end');
+ const tapPoint=await evaluate(`(()=>{const r=document.querySelector('.clip').getBoundingClientRect();return {x:r.x+8,y:r.y+15};})()`);
+ await page('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[tapPoint]});
+ await delay(80);
+ await page('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await until(`document.getElementById('sheet').classList.contains('open')`);
+ await evaluate(`document.getElementById('closeSheet').click()`);
  await until(`!!navigator.serviceWorker.controller`);
  const savedProject=await evaluate(`localStorage.getItem('mapflow-mobile-project-v1')`);
  // Online navigation must replace stale cached HTML, and offline still works.

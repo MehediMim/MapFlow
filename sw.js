@@ -1,4 +1,4 @@
-const VERSION = 'mapflow-v1.0.4';
+const VERSION = 'mapflow-v1.0.5';
 const CORE = ['./','./index.html','./mapflow.css','./mapflow.js','./timeline-snap.mjs','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png','./map-engine.mjs','./map-objects.mjs','./map-route-labels.mjs','./map-country-details.mjs','./map-imagery.mjs','./map-navigation.mjs','./map-places.mjs','./map-video-export.mjs','./engine.mjs','./vector-layers.mjs','./motion-extras.mjs','./motion-structured.mjs','./charts.mjs','./motion-path.mjs','./motion-video.mjs','./map-data/countries-50m.json','./map-data/countries-110m.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE.map(url=>new Request(url,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('mapflow-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
