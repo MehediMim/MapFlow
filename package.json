@@ -1,0 +1,12 @@
+{
+  "name": "mapflow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mapflow mobile map video editor",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "check": "node --check mapflow.js && node --check map-engine.mjs && node --check map-video-export.mjs",
+    "test": "node tests/smoke.mjs"
+  }
+}

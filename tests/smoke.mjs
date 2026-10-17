@@ -1,0 +1,25 @@
+// Run: npm test. No browser dependencies needed.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {buildGeo,installCountryDetail,detailRegions,newMapProject,makeAction,makeShot,countryAt,validateMapProject,cameraAt,screenToLonLat,makeView,project,lonToX,latToY} from '../map-engine.mjs';
+import {detailInfo} from '../map-country-details.mjs';
+const read=n=>JSON.parse(readFileSync(new URL('../map-data/'+n,import.meta.url),'utf8'));
+const geo=buildGeo(read('countries-50m.json'),read('countries-110m.json'));
+assert(geo.names.length>200);
+assert.equal(countryAt(geo,90.4125,23.81),'Bangladesh');
+assert.equal(countryAt(geo,96.1735,16.84),'Myanmar');
+assert.equal(countryAt(geo,0,0),null);
+const p=newMapProject();p.width=720;p.height=1280;p.frames=360;p.area={...p.area,mode:'country',country:'Myanmar',detailLevel:'division'};
+installCountryDetail(geo,read('myanmar-detail.json'));
+assert.equal(detailRegions(p,geo).length,15);
+assert.equal(detailInfo(geo,'Myanmar').defaultLevel,'division');
+p.actions.push(makeAction('pin',5,{place:{kind:'city',name:'Yangon',lat:16.84,lon:96.17}}));
+p.shots.push(makeShot('flyTo',45,{target:{kind:'city',name:'Mandalay',lat:21.96,lon:96.08}}));
+validateMapProject(p);
+const cam=cameraAt(p,geo,p.width,p.height,100);
+assert(Number.isFinite(cam.cx)&&Number.isFinite(cam.zoom));
+const view=makeView(cam,p.width,p.height),point=project(view,lonToX(96),latToY(21));
+const back=screenToLonLat(view,point.x,point.y);
+assert(Math.abs(back.lon-96)<1e-5&&Math.abs(back.lat-21)<1e-5);
+const bd=read('bangladesh-detail.json');assert(bd.features.length>100);assert(bd.features.some(f=>f.properties.level==='district'));
+console.log('Mapflow smoke tests passed. Countries:',geo.names.length,'Myanmar divisions:',detailRegions(p,geo).length,'Bangladesh features:',bd.features.length);
