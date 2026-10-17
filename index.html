@@ -15,16 +15,31 @@
 </head>
 <body>
 <div id="app">
+  <main class="home-screen" id="homeScreen" aria-labelledby="homeTitle">
+    <header class="home-header"><img src="icons/icon.svg" alt="" width="42" height="42"><span>Mapflow<small>MOBILE MAP STUDIO</small></span><span class="home-badge">YOUR CREATIVE SPACE</span></header>
+    <section class="home-hero">
+      <div class="eyebrow">A WORLD OF STORIES</div>
+      <h1 id="homeTitle" tabindex="-1">Put your story<br>on the map.</h1>
+      <p>Turn places, journeys, and ideas into animated maps. Create something worth sharing, right from your phone.</p>
+      <div class="home-art" aria-hidden="true"><div class="map-orbit orbit-one"></div><div class="map-orbit orbit-two"></div><span class="map-point point-start"></span><span class="map-point point-end"></span><span class="art-label">YOUR NEXT ADVENTURE</span></div>
+      <button class="home-create" id="newProjectBtn"><span>+</span> Create new project <span aria-hidden="true">↗</span></button>
+      <button class="home-import" id="homeImportBtn">Import a project <span>JSON</span></button>
+    </section>
+    <section class="home-projects" aria-labelledby="projectsTitle"><div class="home-section-heading"><h2 id="projectsTitle">Your project</h2><span>Saved on this device</span></div><button class="recent-project" id="resumeProjectBtn" hidden><span class="project-thumbnail" aria-hidden="true">M</span><span class="project-summary"><strong id="recentProjectName"></strong><small id="recentProjectMeta"></small></span><span aria-hidden="true">→</span></button><p class="home-empty" id="homeEmpty">Your next story starts here. Create a project or import one to get going.</p></section>
+    <footer class="home-footer">Made for places. Built for stories.</footer>
+  </main>
+  <div class="workspace" id="workspace" hidden inert>
   <header class="topbar">
+    <button class="icon-btn home-back" id="homeBtn" aria-label="Back to home" title="Back to home"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
     <div class="brand"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 10L14 5 23 10 29 6V23L19 28 10 23 4 26Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M14 5V22M23 10L19 28" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="13" r="3" fill="#b5ff67"/></svg></span><div><strong>Mapflow</strong><small>MOBILE MAP STUDIO</small></div></div>
     <button class="project-name" id="projectName" title="Rename project">My map <span>⌄</span></button>
     <div class="header-actions"><button class="icon-btn" id="undoBtn" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button class="icon-btn" id="redoBtn" aria-label="Redo" title="Redo"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h3"/></svg></button><button class="export-btn" id="exportBtn"><svg viewBox="0 0 24 24"><path d="M12 16V3m0 0L7 8m5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Export</button></div>
   </header>
   <main class="editor">
-    <section class="preview-panel" aria-label="Map preview">
-      <div class="preview-top"><span class="preview-chip"><span class="live-dot"></span> PREVIEW</span><span class="preview-meta" id="previewMeta">9:16 • 30 FPS</span><button class="preview-mini" id="fitBtn" aria-label="Reset preview position" title="Reset preview">Reset view</button></div>
+    <section class="preview-panel" id="previewPanel" aria-label="Map preview">
+      <div class="preview-top"><span class="preview-chip"><span class="live-dot"></span> PREVIEW</span><span class="preview-meta" id="previewMeta">9:16 • 30 FPS</span><button class="preview-mini" id="fitBtn" aria-label="Reset preview position" title="Reset preview">Reset view</button><button class="preview-mini fullscreen-toggle" id="fullscreenBtn" aria-label="Enter fullscreen preview" aria-pressed="false">Fullscreen</button></div>
       <div class="stage" id="stage"><div class="canvas-surround" id="canvasSurround"><canvas id="mapCanvas" width="720" height="1280" aria-label="Animated map canvas"></canvas><div class="canvas-loading" id="loading"><span class="loader"></span><span>Loading world map…</span></div></div><div class="place-hint" id="placeHint" hidden><span id="placeHintText">Tap a location</span><button id="placeDone" type="button">Done ✓</button><button id="placeCancel" type="button" aria-label="Cancel picking">×</button></div></div>
-      <div class="preview-bottom"><span class="preview-instruction" id="stageInstruction">Drag to explore · Pinch to zoom</span><button class="frame-png" id="pngBtn" title="Save current frame as PNG">PNG <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v4h16v-4"/></svg></button></div>
+      <div class="preview-bottom"><span class="preview-instruction" id="stageInstruction">Drag to explore · Pinch to zoom</span><button class="preview-play" id="previewPlayBtn" hidden>Play</button><button class="frame-png" id="pngBtn" title="Save current frame as PNG">PNG <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v4h16v-4"/></svg></button></div>
     </section>
     <section class="editing-panel" aria-label="Editing tools">
       <div class="transport"><div class="time-display"><strong id="currentTime">00:00.0</strong><span>/</span><span id="totalTime">00:12.0</span></div><div class="transport-buttons"><button id="goStart" title="Go to start" aria-label="Go to start"><svg viewBox="0 0 24 24"><path d="M5 4v16M19 5 8 12l11 7z"/></svg></button><button id="playBtn" class="play-button" aria-label="Play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z" fill="currentColor" stroke="none"/></svg></button><button id="goEnd" title="Go to end" aria-label="Go to end"><svg viewBox="0 0 24 24"><path d="M19 4v16M5 5l11 7-11 7z"/></svg></button></div><button class="transport-menu" id="timelineZoomBtn" title="Timeline zoom">1×</button></div>
@@ -34,6 +49,7 @@
       <nav class="toolnav" aria-label="Editing tools"><button class="toolnav-item active" data-tool="add"><span class="tool-icon add-icon">+</span><span>Add</span></button><button class="toolnav-item" data-tool="edit"><span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9M16 4l4 4-11 11H5v-4L16 4z"/></svg></span><span>Edit</span></button><button class="toolnav-item" data-tool="camera"><span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M3 7h13v11H3zM16 10l5-3v11l-5-3zM7 7l2-3h4l2 3"/></svg></span><span>Camera</span></button><button class="toolnav-item" data-tool="style"><span class="tool-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h2a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4h2a4 4 0 0 0 0-8H12Z"/><circle cx="7" cy="12" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="17" cy="9" r="1"/></svg></span><span>Style</span></button><button class="toolnav-item" data-tool="project"><span class="tool-icon"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><span>Project</span></button></nav>
     </section>
   </main>
+  </div>
   <div class="scrim" id="scrim" hidden></div>
   <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Editor panel" aria-hidden="true"><div class="sheet-handle"></div><div class="sheet-header"><div><div class="eyebrow" id="sheetEyebrow">MAPFLOW TOOLS</div><h2 id="sheetTitle">Add to map</h2></div><button id="closeSheet" class="icon-btn close-sheet" aria-label="Close panel">×</button></div><div class="sheet-scroll" id="sheetContent"></div></section>
   <input type="file" id="importInput" accept=".json,application/json" hidden>

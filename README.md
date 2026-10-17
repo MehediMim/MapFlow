@@ -20,6 +20,16 @@ Do **not** double-click `index.html` and open it as a `file://` URL; browsers no
 
 A local Wi-Fi HTTP URL can be used to preview the app on your phone, but **PWA installation and offline caching normally require HTTPS** (localhost is the development exception). This is a web app, so it is not an APK installable by opening the ZIP. To distribute through app stores, package the web app using a native wrapper such as Capacitor and follow that platform's signing/build process.
 
+## Home and touch controls
+
+The app opens on a home screen with **Create new project**, **Import a project**, and your saved project. Use the editor's back arrow to return home. One project is autosaved on this device; export its JSON before replacing it with a new project.
+
+Run optional real-browser UI checks with `node tests/ui.mjs` (Node 22+ and a local Chrome or Edge installation), or pass the browser executable as its first argument.
+
+Interface text cannot be selected accidentally. Text fields still support normal editing, selection, and copy/paste. Swipe vertically over timeline lanes or clips to scroll between layers; swipe horizontally on empty lanes to scrub, or drag a clip horizontally to move it. Drag its right handle horizontally to resize it.
+
+Tap **Fullscreen** above the map to expand the preview. Use **Play/Pause** below the map during fullscreen playback, and **Exit fullscreen** (or Escape on desktop) to return to editing. Browsers without native fullscreen use an expanded in-app preview.
+
 ## What you can edit
 
 - **Animations:** Border, Travel, Highlight, Pin, Object, Effect, Arrow/Zone, and Text Label.
